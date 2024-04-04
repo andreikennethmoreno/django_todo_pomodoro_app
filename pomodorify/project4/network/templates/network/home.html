@@ -1,0 +1,693 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+{% if user.is_authenticated %}
+
+<style>
+
+    .timer-display {
+        font-size: 7em; /* Adjust the font size as needed */
+        text-align: center;
+        font-weight: bold; /* Use font-weight to make the text bold */
+    }
+
+      .list-group-item.active {
+        background-color: #32a852;
+    }
+
+    #taskTitleDisplay {
+        text-align: center;
+    }
+    #taskTitleDisplay2 {
+        text-align: center;
+    }
+   
+  
+</style>
+
+
+<div class="container top">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+        
+          
+            <!-- Nav tabs -->
+<ul class="nav nav-tabs justify-content-center mb-4" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" data-toggle="tab" href="#timer25">Pomodoro</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#timer5">Break</a>
+    </li>
+  </ul>
+  
+  <!-- Timer content -->
+  <div class="tab-content">
+    <div id="timer25" class="container tab-pane active">
+      <!-- 25-minute timer section -->
+      <div id="timer25Display" class="timer-display">25:00</div>
+      <h4><div id="taskTitleDisplay"></div></h4>
+      
+      <!-- Centering the buttons -->
+      <div class="container p-3 d-flex justify-content-center text-center">
+        <button id="toggleBtn25" class="btn btn-primary mx-2" title="start Pomodoro">Start</button>
+        <button id="resetBtn25" class="btn btn-warning mx-2" title="Reset Pomodoro"><i class="fa-solid fa-arrow-rotate-right"></i></button>
+        <button id="saveBtn25" class="btn btn-success mx-2">Save</button>
+      </div>
+
+      <div class="form-group">
+        <label for="timerInput25">Set Timer (minutes):</label>
+        <input type="number" class="form-control" id="timerInput25" min="1">
+    </div>
+    </div>
+  
+    <div id="timer5" class="container tab-pane fade">
+      <!-- 5-minute timer section -->
+      <div id="timer5Display" class="timer-display" id="timerInpu5" min="1">05:00</div>
+      <h4><div id="taskTitleDisplay2">Break</div></h4>
+      
+      <!-- Centering the buttons -->
+      <div class="container p-3 d-flex justify-content-center text-center">
+        <button id="toggleBtn5" class="btn btn-primary mx-2">Start</button>
+        <button id="resetBtn5" class="btn btn-warning mx-2" title="Reset Pomodoro"><i class="fa-solid fa-arrow-rotate-right"></i></button>
+        <button id="saveBtn5" class="btn btn-success mx-2">Save</button>
+      </div>
+      <div class="form-group">
+        <label for="timerInput5">Set Timer (minutes):</label>
+        <input type="number" class="form-control" id="timerInput5" min="1" value="5">
+    </div>
+    </div>
+
+    
+</div>
+
+
+  
+            
+          
+
+             <!-- Add Task Button -->
+            <div class="text-center">
+                <button type="button" class="col-md-11 btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#myModal">Add Task</button>
+             </div>
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">New Task</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <br>
+                        <div class="modal-body">
+                            {% if user.is_authenticated %}
+                            <form action="{% url 'new_task' %}" method="POST">
+                                {% csrf_token %}
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="title">Title</label>
+                                                <input name="title" type="text" class="form-control" id="title" placeholder="Go to the gym">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="pomodoro">Number of Pomodoros:</label>
+                                                <input type="number" name="pomodoro" class="form-control" id="pomodoro" placeholder="Enter number of Pomodoros" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <input type="submit" class="btn btn-outline-success btn-block" value="Add Task" id="postButton" style="font-weight: bold;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end -->
+
+            
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs justify-content-center" role="tablist" id="myTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="tab" href="#complete">Complete</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#incomplete">Incomplete</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div id="complete" class="container tab-pane active"><br>
+                        <h3>Complete Tasks</h3>
+
+                         <!-- complete task section -->
+                        {% for task in all_tasks %}
+                        {% if task.completed == True %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="height: 60px;">
+
+                            <form action="{% url 'check_false' task.id %}" method="post" class="row align-items-center">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success col-auto"><i class="fa-solid fa-check"></i></button>
+                                <div class="col"><del>{{ task.title }}</del></div>
+                            </form>
+                            
+
+                            <div class="d-flex align-items-center">
+                                <p class="d-inline-flex me-2 mb-0">
+                                    <div class="d-inline-flex me-2 mb-0 p-1 smi"  >{{ task.pomo_counter }}</div><div class="p=1"></div> |{{ task.pomodoro }}</>
+                                </p>
+                                <div class="mb-1"></div>                                
+
+                                <div class="mr-3"></div> <!-- Adding vertical space -->
+                                <form class="d-inline-flex me-2" action="{% url 'delete_task' task.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-link d-inline-flex me-2" data-toggle="modal" data-target="#modal_edit_task_{{ task.id }}">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+
+
+                                <!-- Modal -->
+                                <div class="modal fade" id="modal_edit_task_{{ task.id }}" tabindex="-1" role="dialog" aria-labelledby="modal_edit_task_{{ task.id }}_label" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <form action="{% url 'edit_task' task.id %}" method="post"> <!-- Changed action to the URL of the edit_task view -->
+                                                {% csrf_token %}
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="modal_edit_task_{{ task.id }}_label">Edit Task</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        <label for="task_title_{{ task.id }}">Task Title</label>
+                                                        <input name="title" type="text" class="form-control" id="task_title_{{ task.id }}" value="{{ task.title }}">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label for="task_pomodoro_{{ task.id }}">number of pomodoro</label>
+                                                        <input name="pomodoro" type="number" class="form-control" id="task_pomodoro_{{ task.id }}" value="{{ task.pomodoro }}"></input>
+                                                    </div>
+                                                    
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Save changes</button> <!-- Changed button type to submit -->
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </li>
+                        {% endif %}
+
+
+
+                        
+
+                        {% endfor %}
+                        <!-- end -->
+
+
+
+                        </div>
+                        <div id="incomplete" class="container tab-pane fade"><br>
+                        <h3>Incomplete Tasks</h3>
+                            <!-- incomplete task section -->
+                            <div id="topDiv">
+                                {% for task in all_tasks %}
+                                    {% if task.completed == False %}
+                                        {% if forloop.first %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action active" style="height: 60px; custom-width" 
+                                                data-task-id="{{ task.id }}"
+                                                data-task-title="{{ task.title }}"
+                                                data-pomo-counter="{{ task.pomo_counter }}"
+                                                data-pomodoro="{{ task.pomodoro }}"
+                                                {% if task.is_at_top %}data-top="true"{% endif %}>
+                                            
+                                        {% else %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action" style="height: 60px; custom-width" 
+                                                data-task-id="{{ task.id }}"
+                                                data-task-title="{{ task.title }}"
+                                                data-pomo-counter="{{ task.pomo_counter }}"
+                                                data-pomodoro="{{ task.pomodoro }}"
+                                                {% if task.is_at_top %}data-top="true"{% endif %}>
+                                        {% endif %}
+                                            <form action="{% url 'check_true' task.id %}" method="post" class="row align-items-center">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-secondary col-auto"><i class="fa-solid fa-check"></i></button>
+                                                <div class="col">{{ task.title }}</div>
+                                            </form>
+                                            <div class="d-flex align-items-center">
+                                                <form id="pomodoroForm" action="{% url 'update_pomo_counter' task.id %}" method="post" data-task-id="{{ task.id }}">
+                                                    {% csrf_token %}
+                                                    <p class="d-inline-flex me-2 mb-0">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm" style="display: none;"></button>
+                                                    </p>
+                                                </form>
+                                                <div class="d-inline-flex me-2 mb-2">{{ task.pomo_counter }} | {{ task.pomodoro }}</div> 
+
+                                                <button type="button" class="btn btn-link d-inline-flex me-2 move-to-top" data-task-id="{{ task.id }}" data-toggle="modal" data-target="#modal_edit_task_{{ task.id }}">
+                                                    {% if task.is_at_top %}
+                                                        <i class="fa-solid fa-arrow-down"></i>
+                                                    {% else %}
+                                                        <i class="fa-solid fa-arrow-up"></i>
+                                                    {% endif %}
+                                                </button>
+                                                <div class="mb-1"></div>
+                                                <form class="d-inline-flex me-2" action="{% url 'delete_task' task.id %}" method="POST">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                                <button type="button" class="btn btn-link d-inline-flex me-2" data-toggle="modal" data-target="#modal_incomplete_task_{{ task.id }}">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                
+                                                
+                                                
+                                            </div>
+                                        </li>
+                                    {% endif %}
+
+
+
+                                        <!-- Modal -->
+                                        <!-- Modal -->
+                                        <div class="modal fade" id="modal_incomplete_task_{{ task.id }}" tabindex="-1" role="dialog" aria-labelledby="modal_incomplete_task_{{ task.id }}_label" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form action="{% url 'edit_task' task.id %}" method="post"> <!-- Changed action to the URL of the edit_task view -->
+                                                        {% csrf_token %}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="modal_incomplete_task_{{ task.id }}_label">Edit Task</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                        
+                                                        <div class="modal-body">
+                                                            <div class="form-group">
+                                                                <label for="task_title_{{ task.id }}">Task Title</label>
+                                                                <input name="title" type="text" class="form-control" id="task_title_{{ task.id }}" value="{{ task.title }}">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="task_pomodoro_{{ task.id }}">Number of Pomodoro</label>
+                                                                <input name="pomodoro" type="number" class="form-control" id="task_pomodoro_{{ task.id }}" value="{{ task.pomodoro }}">
+                                                            </div>
+                                                        </div>
+                                        
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                            <button type="submit" class="btn btn-primary">Save changes</button> <!-- Changed button type to submit -->
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        
+
+                                {% endfor %}
+
+
+                                
+                            </div>
+
+<script>
+    $(document).ready(function() {
+        // Function to move task to the top
+        $('.move-to-top').click(function() {
+            var taskId = $(this).data('task-id');
+            var taskLi = $('li[data-task-id="' + taskId + '"]');
+            var taskOrderIndex = taskLi.data('task-order');
+            taskLi.prependTo('#topDiv');
+            updateTaskOrder(taskOrderIndex);
+        });
+
+        // Load task order from localStorage on page load
+        loadTaskOrder();
+
+        // Function to update the order of tasks in localStorage
+        function updateTaskOrder(taskOrderIndex) {
+            var taskOrder = [];
+            $('#topDiv li').each(function() {
+                taskOrder.push($(this).data('task-id'));
+            });
+            localStorage.setItem('taskOrder', JSON.stringify(taskOrder));
+            localStorage.setItem('taskOrderIndex', JSON.stringify(taskOrderIndex));
+            highlightActiveTask();
+        }
+
+        // Function to load task order from localStorage
+        function loadTaskOrder() {
+            var storedTaskOrder = JSON.parse(localStorage.getItem('taskOrder'));
+            if (storedTaskOrder) {
+                storedTaskOrder = JSON.parse(localStorage.getItem('taskOrder'));
+                $('#topDiv li').each(function(index) {
+                    var taskId = $(this).data('task-id');
+                    if (index === 0 && storedTaskOrder[0] !== taskId) {
+                        // Move the most bottom item to the top
+                        var bottomTaskLi = $('li[data-task-id="' + storedTaskOrder[0] + '"]');
+                        bottomTaskLi.prependTo('#topDiv');
+                    }
+                    var taskOrderIndex = storedTaskOrder.indexOf(taskId);
+                    if (taskOrderIndex !== -1) {
+                        $(this).data('task-order', taskOrderIndex + 1);
+                    }
+                });
+                highlightActiveTask();
+            }
+        }
+
+        // Function to highlight the active task and display its title
+        function highlightActiveTask() {
+            $('#topDiv li').each(function(index) {
+                if (index === 0) {
+                    $(this).addClass('active');
+                    var taskTitle = $(this).data('task-title');
+                    $('#taskTitleDisplay').text(taskTitle);
+                } else {
+                    $(this).removeClass('active');
+                }
+            });
+        }
+    });
+</script>
+
+                        
+                        
+                   
+                    
+                        
+                        <!-- end -->
+
+
+
+
+
+                        </div>
+                    </div>
+                    </div>
+
+
+                </ul>
+            </div>
+        </div>
+
+
+        
+         <!-- Timer logic -->
+
+
+<script>
+     // Get all list items
+     var listItems = document.querySelectorAll('.list-group-item');
+    
+   
+     
+ 
+     document.addEventListener("DOMContentLoaded", function() {
+         // Get the active tab index from localStorage, default to 0 (first tab) if not set
+         const activeTabIndex = localStorage.getItem("activeTabIndex") || 0;
+ 
+         // Activate the tab based on the retrieved index
+         $('#myTabs li:eq(' + activeTabIndex + ') a').tab('show');
+ 
+         // Store the index of the active tab in localStorage whenever a tab is shown
+         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+             const targetTab = $(e.target).attr("href"); // Get the href attribute of the activated tab
+             const tabIndices = {
+                 "#complete": 0,
+                 "#incomplete": 1
+             };
+             const tabIndex = tabIndices[targetTab]; // Get the index of the activated tab
+             localStorage.setItem("activeTabIndex", tabIndex); // Store the index in localStorage
+         });
+     });
+    </script>
+
+    <script>
+
+        let timerInterval25;
+let minutes25 = localStorage.getItem('minutes25') || 25;
+let seconds25 = localStorage.getItem('seconds25') || 0;
+let timerDisplay25 = document.getElementById('timer25Display');
+let counterDisplay25 = document.getElementById('counter25');
+let toggleBtn25 = document.getElementById('toggleBtn25');
+let resetBtn25 = document.getElementById('resetBtn25');
+let timerInput25 = document.getElementById('timerInput25');
+let isTimerRunning25 = localStorage.getItem('isTimerRunning25') === 'true' || false;
+let pomodoroCounter25 = localStorage.getItem('pomodoroCounter25') || 0; // Counter variable for 25-minute timer
+
+// Timer logic for 5 minutes
+let timerInterval5;
+let minutes5 = localStorage.getItem('minutes5') || 5;
+let seconds5 = localStorage.getItem('seconds5') || 0;
+let timerDisplay5 = document.getElementById('timer5Display');
+let counterDisplay5 = document.getElementById('counter5');
+let toggleBtn5 = document.getElementById('toggleBtn5');
+let resetBtn5 = document.getElementById('resetBtn5');
+let timerInput5 = document.getElementById('timerInput5');
+let isTimerRunning5 = localStorage.getItem('isTimerRunning5') === 'true' || false;
+let pomodoroCounter5 = localStorage.getItem('pomodoroCounter5') || 0; // Counter variable for 5-minute timer
+
+// Initialize timer input value
+let timerInputValue25 = localStorage.getItem('timerInputValue25') || 25; // Default value is 25
+let timerInputValue5 = localStorage.getItem('timerInputValue5') || 5; // Default value is 5
+
+timerInput25.value = timerInputValue25;
+
+// Event listener for input change
+timerInput25.addEventListener('input', function() {
+    timerInputValue25 = parseInt(timerInput25.value);
+    localStorage.setItem('timerInputValue25', timerInputValue25);
+});
+
+// Event listener for input change
+timerInput5.addEventListener('input', function() {
+    timerInputValue5 = parseInt(timerInput5.value);
+    localStorage.setItem('timerInputValue5', timerInputValue5);
+});
+
+
+// Function to reset timer and stop timer if running
+resetBtn25.addEventListener('click', function() {
+    minutes25 = timerInputValue25;
+    seconds25 = 0;
+    updateTimerDisplay(timerDisplay25, minutes25, seconds25);
+    stopTimer25();
+});
+
+function toggleTimer25() {
+    if (!isTimerRunning25) {
+        startTimer25();
+    } else {
+        stopTimer25();
+    }
+}
+
+function startTimer25() {
+    timerInterval25 = setInterval(updateTimer25, 1000);
+    toggleBtn25.textContent = 'Stop';
+    isTimerRunning25 = true;
+    localStorage.setItem('isTimerRunning25', true);
+}
+
+function stopTimer25() {
+
+    clearInterval(timerInterval25);
+    toggleBtn25.textContent = 'Start';
+    isTimerRunning25 = false;
+    localStorage.setItem('isTimerRunning25', false);
+}
+function updateTimer25() {
+
+    if (minutes25 === 0 && seconds25 === 0) {
+        // Timer finished
+        
+        alert('25-Minute Timer finished!');
+        clearInterval(timerInterval25);
+        document.getElementById('pomodoroForm').submit();
+        toggleBtn25.textContent = 'Start';
+        isTimerRunning25 = false;
+        pomodoroCounter25++; // Increment counter
+        counterDisplay25.textContent = `Pomodoros Completed: ${pomodoroCounter25}`; // Update counter display
+        localStorage.setItem('pomodoroCounter25', pomodoroCounter25);
+        
+        return;
+    }
+
+    // Decrease seconds
+    seconds25--;
+    if (seconds25 < 0) {
+        // If seconds become negative, adjust minutes and seconds
+        
+        if (minutes25 > 0) {
+            minutes25--;
+            seconds25 = 59;
+        } else {
+            
+            seconds25 = 0;
+            minutes25 = 0;
+            updateTimerDisplay(timerDisplay25, minutes25, seconds25);
+            stopTimer25();
+            return;
+        }
+    }
+
+
+
+    updateTimerDisplay(timerDisplay25, minutes25, seconds25);
+    localStorage.setItem('minutes25', minutes25);
+    localStorage.setItem('seconds25', seconds25);
+}
+
+
+function toggleTimer5() {
+    if (!isTimerRunning5) {
+        startTimer5();
+    } else {
+        stopTimer5();
+    }
+}
+
+function startTimer5() {
+    timerInterval5 = setInterval(updateTimer5, 1000);
+    toggleBtn5.textContent = 'Stop';
+    isTimerRunning5 = true;
+    localStorage.setItem('isTimerRunning5', true);
+}
+
+function stopTimer5() {
+    clearInterval(timerInterval5);
+    toggleBtn5.textContent = 'Start';
+    isTimerRunning5 = false;
+    localStorage.setItem('isTimerRunning5', false);
+}
+
+function updateTimer5() {
+    if (minutes5 === 0 && seconds5 === 0) {
+        // Timer finished
+        alert('5-Minute Timer finished!');
+        clearInterval(timerInterval5);
+        toggleBtn5.textContent = 'Start';
+        isTimerRunning5 = false;
+        pomodoroCounter5++; // Increment counter
+        counterDisplay5.textContent = `Pomodoros Completed: ${pomodoroCounter5}`; // Update counter display
+        localStorage.setItem('pomodoroCounter5', pomodoroCounter5);
+        return;
+    }
+
+    // Decrease seconds
+    seconds5--;
+    if (seconds5 < 0) {
+        // If seconds become negative, adjust minutes and seconds
+        if (minutes5 > 0) {
+            minutes5--;
+            seconds5 = 59;
+        } else {
+            // Timer finished
+            seconds5 = 0;
+            minutes5 = 0;
+            updateTimerDisplay(timerDisplay5, minutes5, seconds5);
+            stopTimer5();
+            return;
+        }
+    }
+
+    // Update timer display
+    updateTimerDisplay(timerDisplay5, minutes5, seconds5);
+
+    // Save timer state to local storage
+    localStorage.setItem('minutes5', minutes5);
+    localStorage.setItem('seconds5', seconds5);
+}
+
+function updateTimerDisplay(display, minutes, seconds) {
+    display.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+toggleBtn25.addEventListener('click', toggleTimer25);
+resetBtn25.addEventListener('click', function() {
+    minutes25 = parseInt(timerInput25.value);
+    seconds25 = 0;
+    updateTimerDisplay(timerDisplay25, minutes25, seconds25);
+    stopTimer25();
+});
+document.getElementById('saveBtn25').addEventListener('click', function() {
+    minutes25 = parseInt(timerInput25.value);
+    updateTimerDisplay(timerDisplay25, minutes25, seconds25);
+});
+
+toggleBtn5.addEventListener('click', toggleTimer5);
+resetBtn5.addEventListener('click', function() {
+    minutes5 = parseInt(timerInput5.value);
+    seconds5 = 0;
+    updateTimerDisplay(timerDisplay5, minutes5, seconds5);
+    stopTimer5();
+});
+document.getElementById('saveBtn5').addEventListener('click', function() {
+    minutes5 = parseInt(timerInput5.value);
+    updateTimerDisplay(timerDisplay5, minutes5, seconds5);
+});
+
+// Initialize timers
+updateTimerDisplay(timerDisplay25, minutes25, seconds25);
+updateTimerDisplay(timerDisplay5, minutes5, seconds5);
+if (isTimerRunning25) {
+    startTimer25();
+}
+if (isTimerRunning5) {
+    startTimer5();
+}
+
+    
+    </script>
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+</div>
+
+
+
+
+{% else %}
+{% endif %}
+
+
+
+{% endblock %}
